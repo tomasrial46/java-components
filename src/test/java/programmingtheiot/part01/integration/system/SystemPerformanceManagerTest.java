@@ -9,6 +9,7 @@
 
 package programmingtheiot.part01.integration.system;
 
+import static org.junit.Assert.assertTrue;
 import java.util.logging.Logger;
 
 import org.junit.After;
@@ -84,15 +85,17 @@ public class SystemPerformanceManagerTest
 	@Test
 	public void testStartAndStopManager()
 	{
-		this.spMgr.startManager();
-		
+		boolean startResult = this.spMgr.startManager();
+		assertTrue("SystemPerformanceManager should start successfully", startResult);
+
 		try {
 			Thread.sleep(60000L);
 		} catch (InterruptedException e) {
 			// ignore
 		}
 		
-		this.spMgr.stopManager();
+		boolean stopResult = this.spMgr.stopManager();
+    	assertTrue("SystemPerformanceManager should stop successfully.", stopResult);
 	}
 	
 }
