@@ -63,21 +63,63 @@ public class MqttClientControlPacketTest
 	@Test
 	public void testConnectAndDisconnect()
 	{
-		// TODO: implement this test
+		boolean isConnected = this.mqttClient.connectClient();
+		assertTrue(isConnected);
+
+		try {
+			Thread.sleep(3000);
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+		}
+
+		boolean isDisconnected = this.mqttClient.disconnectClient();
+		assertTrue(isDisconnected);
 	}
 	
 	@Test
 	public void testServerPing()
 	{
-		// TODO: implement this test
+		boolean isConnected = this.mqttClient.connectClient();
+		assertTrue(isConnected);
+
+		try {
+			_Logger.info("Waiting to allow PINGREQ/PINGRESP packets to be generated...");
+			Thread.sleep(7000);  
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+		}
+
+		boolean isDisconnected = this.mqttClient.disconnectClient();
+		assertTrue(isDisconnected);
 	}
 	
 	@Test
 	public void testPubSub()
 	{
-		// TODO: implement this test
-		// 
-		// IMPORTANT: be sure to use QoS 1 and 2 to see ALL control packets
+		boolean isConnected = this.mqttClient.connectClient();
+		assertTrue(isConnected);
+
+		ResourceNameEnum topic = ResourceNameEnum.GDA_MGMT_STATUS_MSG_RESOURCE;
+
+		boolean isSubscribed = this.mqttClient.subscribeToTopic(topic, 2);
+		assertTrue(isSubscribed);
+
+		// Publicar con QoS 1
+		this.mqttClient.publishMessage(topic, "QoS 1 Message", 1);
+		// Publicar con QoS 2
+		this.mqttClient.publishMessage(topic, "QoS 2 Message", 2);
+
+		try {
+			Thread.sleep(3000); // Espera para recibir los mensajes
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+		}
+
+		boolean isUnsubscribed = this.mqttClient.unsubscribeFromTopic(topic);
+		assertTrue(isUnsubscribed);
+
+		boolean isDisconnected = this.mqttClient.disconnectClient();
+		assertTrue(isDisconnected);
 	}
 	
 }
