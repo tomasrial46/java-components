@@ -174,6 +174,11 @@ public class DeviceDataManager implements IDataMessageListener
 	
 	public void setActuatorDataListener(String name, IActuatorDataListener listener)
 	{
+		if (listener !=null) {
+			// for now, just ignore 'name' - if you need more than one listener,
+			// you can use 'name' to create a map of listener instances
+			this.actuatorDataListener =listener;
+				}
 	}
 	
 	public void startManager()
@@ -206,6 +211,14 @@ public class DeviceDataManager implements IDataMessageListener
 		if (this.sysPerfMgr != null) {
 			this.sysPerfMgr.startManager();
 		}
+
+		if (this.enableCoapServer && this.coapServer != null) {
+			if (this.coapServer.startServer()) {
+				_Logger.info("CoAP server started.");
+			} else {
+				_Logger.severe("Failed to start CoAP server. Check log file for details.");
+			}
+		}
 	}
 
 	public void stopManager()
@@ -237,6 +250,14 @@ public class DeviceDataManager implements IDataMessageListener
 				// TODO: take appropriate action
 			}
 		}
+
+		if (this.enableCoapServer && this.coapServer != null) {
+			if (this.coapServer.stopServer()) {
+				_Logger.info("CoAP server stopped.");
+			} else {
+				_Logger.severe("Failed to stop CoAP server. Check log file for details.");
+			}
+		}
 	}
 
 	
@@ -255,10 +276,16 @@ public class DeviceDataManager implements IDataMessageListener
 		}
 	}
 
-	private void handleIncomingDataAnalysis(ResourceNameEnum resourceName, SystemStateData data)
+	private void handleIncomingDataAnalysis(ResourceNameEnum resourceName, ActuatorData data)
 	{
-		if (data != null) {
-			_Logger.fine("handleIncomingDataAnalysis called for SystemStateData: " + data.getName());
+		_Logger.info("Analyzing incoming actuator data: " +data.getName());
+
+		if (data.isResponseFlagEnabled()) {
+		// TODO: implement this
+			}else {
+		if (this.actuatorDataListener !=null) {
+		this.actuatorDataListener.onActuatorDataUpdate(data);
+				}
 		}
 	}
 
@@ -274,32 +301,34 @@ public class DeviceDataManager implements IDataMessageListener
 	{
 	}
 	private void initManager()
-	{
-		ConfigUtil configUtil = ConfigUtil.getInstance();
-		this.enableSystemPerf =
-			configUtil.getBoolean(ConfigConst.GATEWAY_DEVICE,  ConfigConst.ENABLE_SYSTEM_PERF_KEY);
+{
+	ConfigUtil configUtil = ConfigUtil.getInstance();
 
-		if (this.enableSystemPerf) {
-			this.sysPerfMgr = new SystemPerformanceManager();
-			this.sysPerfMgr.setDataMessageListener(this);
-		}
+	this.enableSystemPerf =
+		configUtil.getBoolean(ConfigConst.GATEWAY_DEVICE,  ConfigConst.ENABLE_SYSTEM_PERF_KEY);
 
-		if (this.enableMqttClient) {
-			this.mqttClient = new MqttClientConnector();
-			this.mqttClient.setDataMessageListener(this);
-		}
+	if (this.enableSystemPerf) {
+		this.sysPerfMgr = new SystemPerformanceManager();
+		this.sysPerfMgr.setDataMessageListener(this);
+	}
 
+	if (this.enableMqttClient) {
+		this.mqttClient = new MqttClientConnector();
+
+		// NOTE: The next line isn't technically needed until Lab Module 10
+		this.mqttClient.setDataMessageListener(this);
+	}
+
+	if (this.enableCoapServer) {
 		if (this.enableCoapServer) {
-			// TODO: implement this in Lab Module 8
-		}
-
-		if (this.enableCloudClient) {
-			// TODO: implement this in Lab Module 10
-		}
-
-		if (this.enablePersistenceClient) {
-			// TODO: implement this as an optional exercise in Lab Module 5
+			this.coapServer = new CoapServerGateway(this);
 		}
 	}
+
+	if (this.enableCloudClient) {
+		// TODO: implement this in Lab Module 10
+	}
+
+}
 		
 }
