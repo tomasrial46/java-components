@@ -187,16 +187,10 @@ public class DeviceDataManager implements IDataMessageListener
 			if (this.mqttClient.connectClient()) {
 				_Logger.info("Successfully connected MQTT client to broker.");
 
-				// add necessary subscriptions
-
-				// TODO: read this from the configuration file
+		
 				int qos = ConfigConst.DEFAULT_QOS;
 
-				// TODO: check the return value for each and take appropriate action
 
-				// IMPORTANT NOTE: The 'subscribeToTopic()' method calls shown
-				// below will be moved to MqttClientConnector.connectComplete()
-				// in Lab Module 10. For now, they can remain here.
 				this.mqttClient.subscribeToTopic(ResourceNameEnum.GDA_MGMT_STATUS_MSG_RESOURCE, qos);
 				this.mqttClient.subscribeToTopic(ResourceNameEnum.CDA_ACTUATOR_RESPONSE_RESOURCE, qos);
 				this.mqttClient.subscribeToTopic(ResourceNameEnum.CDA_SENSOR_MSG_RESOURCE, qos);
@@ -204,7 +198,6 @@ public class DeviceDataManager implements IDataMessageListener
 			} else {
 				_Logger.severe("Failed to connect MQTT client to broker.");
 
-				// TODO: take appropriate action
 			}
 		}
 
@@ -228,15 +221,7 @@ public class DeviceDataManager implements IDataMessageListener
 		}
 
 		if (this.mqttClient != null) {
-			// add necessary un-subscribes
 
-			// TODO: check the return value for each and take appropriate action
-
-			// NOTE: The unsubscribeFromTopic() method calls below should match with
-			// the subscribeToTopic() method calls from startManager(). Also, the
-			// unsubscribe logic below can be moved to MqttClientConnector's
-			// disconnectClient() call PRIOR to actually disconnecting from
-			// the MQTT broker.
 			this.mqttClient.unsubscribeFromTopic(ResourceNameEnum.GDA_MGMT_STATUS_MSG_RESOURCE);
 			this.mqttClient.unsubscribeFromTopic(ResourceNameEnum.CDA_ACTUATOR_RESPONSE_RESOURCE);
 			this.mqttClient.unsubscribeFromTopic(ResourceNameEnum.CDA_SENSOR_MSG_RESOURCE);
@@ -247,7 +232,6 @@ public class DeviceDataManager implements IDataMessageListener
 			} else {
 				_Logger.severe("Failed to disconnect MQTT client from broker.");
 
-				// TODO: take appropriate action
 			}
 		}
 
@@ -269,12 +253,7 @@ public class DeviceDataManager implements IDataMessageListener
 	 * 
 	 */
 
-	private void handleIncomingDataAnalysis(ResourceNameEnum resourceName, ActuatorData data)
-	{
-		if (data != null) {
-			_Logger.fine("handleIncomingDataAnalysis called for ActuatorData: " + data.getName());
-		}
-	}
+
 
 	private void handleIncomingDataAnalysis(ResourceNameEnum resourceName, ActuatorData data)
 	{
