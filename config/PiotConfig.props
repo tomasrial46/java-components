@@ -85,7 +85,7 @@ testEmptyApp            = False
 handleHumidityChangeOnDevice = True
 
 # min seconds between readings before triggering actuation event
-humidityMaxTimePastThreshold = 10
+humidityMaxTimePastThreshold = 300
 
 # ideal average humidity level (% relative)
 nominalHumiditySetting       = 40.0
