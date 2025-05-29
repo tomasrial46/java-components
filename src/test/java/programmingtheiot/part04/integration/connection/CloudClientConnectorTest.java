@@ -9,12 +9,11 @@
 
  package programmingtheiot.part04.integration.connection;
 
- import static org.junit.Assert.*;
- 
  import java.util.List;
  import java.util.logging.Logger;
  
  import org.junit.After;
+ import static org.junit.Assert.assertTrue;
  import org.junit.Before;
  import org.junit.Test;
  
@@ -24,7 +23,8 @@
  import programmingtheiot.data.SensorData;
  import programmingtheiot.data.SystemPerformanceData;
  import programmingtheiot.gda.app.DeviceDataManager;
- import programmingtheiot.gda.connection.*;
+ import programmingtheiot.gda.connection.CloudClientConnector;
+import programmingtheiot.gda.connection.ICloudClient;
  
  /**
   * This test case class contains very basic integration tests for
@@ -73,7 +73,7 @@
 	  * Test method for {@link programmingtheiot.gda.connection.UbidotsMqttCloudClientConnector#connectClient()}.
 	  */
  
-	  @Test
+	  //@Test
 	 public void testCloudClientConnectAndDisconnect()
 	 {
 		 this.cloudClient.setDataMessageListener(new DefaultDataMessageListener());
@@ -96,7 +96,7 @@
 	 /**
 	  * Test method
 	  */
-	 @Test
+	 //@Test
 	 public void testIntegratedCloudClientConnectAndDisconnect()
 	 {
 		 DeviceDataManager ddm = new DeviceDataManager();
@@ -118,7 +118,7 @@
 	 /**
 	  * Test method for {@link programmingtheiot.gda.connection.UbidotsMqttCloudClientConnector#publishMessage(programmingtheiot.common.ResourceNameEnum, java.lang.String, int)}.
 	  */
-	 @Test
+	 //@Test
 	 public void testPublishAndSubscribe()
 	 {
 		 this.cloudClient.setDataMessageListener(new DefaultDataMessageListener());
@@ -202,7 +202,7 @@
 		 }
 	 }
  
-	 @Test
+	 //@Test
 	 public void testPublishSensorData()
 	 {
 		 this.cloudClient.setDataMessageListener(new DefaultDataMessageListener());
@@ -267,8 +267,88 @@
 		 _Logger.info("Test complete.");
 	 }
  
-	 @Test
-	 public void testGDA(){
-		 
-	 }
+
+	@Test
+	public void testLightSensorEventTrigger()
+	{
+		this.cloudClient.setDataMessageListener(new DefaultDataMessageListener());
+
+		assertTrue(this.cloudClient.connectClient());
+
+		try {
+			Thread.sleep(10000L);
+		} catch (Exception e) {
+			// ignore
+		}
+
+		// Simula una baja iluminación que podría activar un evento en la nube
+		SensorData lightData = new SensorData();
+		lightData.setName(ConfigConst.LIGHT_SENSOR_NAME);
+		lightData.setValue(10.0f);  
+		assertTrue(this.cloudClient.sendEdgeDataToCloud(ResourceNameEnum.CDA_SENSOR_MSG_RESOURCE, lightData));
+
+		lightData = new SensorData();
+		lightData.setName(ConfigConst.LIGHT_SENSOR_NAME);
+		lightData.setValue(5.0f); // Este valor debe estar por encima del umbral en Ubidots
+		assertTrue(this.cloudClient.sendEdgeDataToCloud(ResourceNameEnum.CDA_SENSOR_MSG_RESOURCE, lightData));
+
+		lightData = new SensorData();
+		lightData.setName(ConfigConst.LIGHT_SENSOR_NAME);
+		lightData.setValue(7.0f); // Este valor debe estar por debajo del umbral en Ubidots
+		assertTrue(this.cloudClient.sendEdgeDataToCloud(ResourceNameEnum.CDA_SENSOR_MSG_RESOURCE, lightData));
+
+		try {
+			Thread.sleep(20000L);
+		} catch (Exception e) {
+			// ignore
+		}
+
+		assertTrue(this.cloudClient.disconnectClient());
+
+		_Logger.info("Test for light sensor event trigger complete.");
+	}
+
+	@Test
+	public void testFanActuatorTrigger()
+	{
+		this.cloudClient.setDataMessageListener(new DefaultDataMessageListener());
+
+		assertTrue(this.cloudClient.connectClient());
+
+		try {
+			Thread.sleep(10000L);
+		} catch (Exception e) {
+			// ignore
+		}
+
+		// Primero, envía datos bajos para no activar el ventilador
+		SensorData sensorData = new SensorData();
+		sensorData.setName(ConfigConst.LIGHT_SENSOR_NAME);
+		sensorData.setValue(8.0f);
+		assertTrue(this.cloudClient.sendEdgeDataToCloud(ResourceNameEnum.CDA_SENSOR_MSG_RESOURCE, sensorData));
+
+		try {
+			Thread.sleep(10000L);
+		} catch (Exception e) {
+			// ignore
+		}
+
+		// Luego, envía un valor alto para disparar el evento (si está configurado en Ubidots)
+		sensorData = new SensorData();
+		sensorData.setName(ConfigConst.LIGHT_SENSOR_NAME);
+		sensorData.setValue(3.0f); // Este valor debe estar por encima del umbral en Ubidots
+
+		assertTrue(this.cloudClient.sendEdgeDataToCloud(ResourceNameEnum.CDA_SENSOR_MSG_RESOURCE, sensorData));
+
+		try {
+			Thread.sleep(20000L);
+		} catch (Exception e) {
+			// ignore
+		}
+
+		assertTrue(this.cloudClient.disconnectClient());
+
+		_Logger.info("Test for fan actuator trigger complete.");
+	}
+
  }

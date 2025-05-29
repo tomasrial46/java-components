@@ -131,7 +131,8 @@ public class ConfigConst
 	public static final int    DISPLAY_DEVICE_TYPE       = 2000;
 	public static final int    LED_ACTUATOR_TYPE         = 2001;
 	public static final int    LED_DISPLAY_ACTUATOR_TYPE = 2001;
-	
+	public static final int    FAN_ACTUATOR_TYPE         = 2002;
+
 	public static final int    MEDIA_DEVICE_TYPE         = 3000;
 	public static final int    CAMERA_SENSOR_TYPE        = 3001;
 	
@@ -148,9 +149,11 @@ public class ConfigConst
 	public static final String LED_ACTUATOR_NAME        = "LedActuator";
 	public static final String HUMIDIFIER_ACTUATOR_NAME = "HumidifierActuator";
 	public static final String HVAC_ACTUATOR_NAME       = "HvacActuator";
+	public static final String FAN_ACTUATOR_NAME        = "FanActuator";
 
 	// this is included here for testing purposes only
 	public static final String TEMP_SENSOR_NAME = "TempSensor";
+	public static final String LIGHT_SENSOR_NAME  = "LightSensor";
 	
 	public static final String CPU_UTIL_NAME  = "CpuUtil";
 	public static final String DISK_UTIL_NAME = "DiskUtil";

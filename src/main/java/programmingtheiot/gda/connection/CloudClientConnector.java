@@ -7,9 +7,8 @@
  */ 
 
 package programmingtheiot.gda.connection;
-import java.util.Properties;
-import java.util.logging.Level;
 import java.util.logging.Logger;
+
 import org.eclipse.paho.client.mqttv3.IMqttMessageListener;
 import org.eclipse.paho.client.mqttv3.MqttMessage;
 
@@ -100,7 +99,8 @@ public class CloudClientConnector implements ICloudClient, IConnectionListener
 		_Logger.info("Handling CSP subscriptions and device topic provisioninig...");
 
 		LedEnablementMessageListener ledListener = new LedEnablementMessageListener(this.dataMsgListener);
-
+		FanEnablementMessageListener fanListener = new FanEnablementMessageListener(this.dataMsgListener);
+		// Subscribe to the LED enablement topic, which is used by the CDA to
 		// topic may not exist yet, so create a 'response' actuation event with invalid value -
 		// this will create the relevant topic if it doesn't yet exist, which ensures
 		// the message listener (if coded correctly) will log a message but ignore the
@@ -116,6 +116,17 @@ public class CloudClientConnector implements ICloudClient, IConnectionListener
 		this.publishMessageToCloud(ledTopic, adJson);
 
 		this.mqttClient.subscribeToTopic(ledTopic, this.qosLevel, ledListener);
+
+		ActuatorData fanData = new ActuatorData();
+		fanData.setAsResponse();
+		fanData.setName(ConfigConst.FAN_ACTUATOR_NAME);
+		fanData.setValue((float) -1.0); 
+
+		String fanTopic = createTopicName(fanListener.getResource().getDeviceName(), fanData.getName());
+
+		String fanJson = DataUtil.getInstance().actuatorDataToJson(fanData);
+		this.publishMessageToCloud(fanTopic, fanJson);
+		this.mqttClient.subscribeToTopic(fanTopic, this.qosLevel, fanListener);
 	}
 
 	public void onDisconnect()
@@ -151,7 +162,11 @@ public class CloudClientConnector implements ICloudClient, IConnectionListener
 			jsonBuilder.append(data.getSensorType());
 			jsonBuilder.append("\",\"description\":\"");
 			jsonBuilder.append(data.getDescription());
-			jsonBuilder.append("\"}}");
+			jsonBuilder.append("\",\"name\":\"");
+			jsonBuilder.append(data.getName());
+			jsonBuilder.append("\",\"typeID\":");
+			jsonBuilder.append(data.getTypeID());
+			jsonBuilder.append("}}");
 			
 			String payload = jsonBuilder.toString();
 			return publishMessageToCloud(resource, data.getName(), payload);
@@ -416,5 +431,54 @@ public class CloudClientConnector implements ICloudClient, IConnectionListener
 		}
 	}
 	}
+
+	private class FanEnablementMessageListener implements IMqttMessageListener
+{
+	private IDataMessageListener dataMsgListener = null;
+	private ResourceNameEnum resource = ResourceNameEnum.CDA_ACTUATOR_CMD_RESOURCE;
+	private int    typeID   = ConfigConst.FAN_ACTUATOR_TYPE;
+	private String itemName = ConfigConst.FAN_ACTUATOR_NAME;
+
+	FanEnablementMessageListener(IDataMessageListener dataMsgListener)
+	{
+		this.dataMsgListener = dataMsgListener;
+	}
+
+	public ResourceNameEnum getResource()
+	{
+		return this.resource;
+	}
+
+	@Override
+	public void messageArrived(String topic, MqttMessage message) throws Exception
+	{
+		if (message != null) {
+			String payload = new String(message.getPayload());
+			_Logger.info("Received message payload: " + payload);
+
+			ActuatorData actuatorData = DataUtil.getInstance().jsonToActuatorData(payload);
+
+			if (actuatorData != null) {
+				_Logger.info("ActuatorData object created from JSON payload: " + actuatorData.getName());
+
+				if (actuatorData.getTypeID() == this.typeID) {
+					_Logger.info("Processing actuator command for " + this.itemName);
+
+					if (this.dataMsgListener != null) {
+						this.dataMsgListener.handleActuatorCommandRequest(this.resource, actuatorData);
+					} else {
+						_Logger.warning("No listener available for processing actuator command. Ignoring.");
+					}
+				} else {
+					_Logger.warning("Actuator command type ID doesn't match " + this.itemName + ". Ignoring: " + actuatorData.getTypeID());
+				}
+			} else {
+				_Logger.warning("Failed to create ActuatorData object from JSON payload: " + payload);
+			}
+		} else {
+			_Logger.warning("Received null message. Ignoring.");
+		}
+	}
+}
 
 }
